@@ -1,11 +1,11 @@
 package logging
 
 import (
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"os"
-	// "path/filepath"
-	"encoding/json"
+	"path/filepath"
 	"runtime"
 	"runtime/debug"
 	"sync"
@@ -15,8 +15,7 @@ import (
 func getCaller() string {
 	var caller string
 	if _, file, line, ok := runtime.Caller(2); ok {
-		// caller = fmt.Sprintf("%s:%d", filepath.Base(file), line)
-		caller = fmt.Sprintf("%s:%d", file, line)
+		caller = fmt.Sprintf("%s:%d", filepath.Base(file), line)
 	} else {
 		caller = "unknown"
 	}
@@ -34,11 +33,13 @@ func Debug(msg string, args ...any) {
 }
 
 func Warn(msg string, args ...any) {
-	slog.Warn(msg, args...)
+	source := getCaller()
+	slog.Warn(msg, append([]any{"source", source}, args...)...)
 }
 
 func Error(msg string, args ...any) {
-	slog.Error(msg, args...)
+	source := getCaller()
+	slog.Error(msg, append([]any{"source", source}, args...)...)
 }
 
 func InfoPersist(msg string, args ...any) {
@@ -98,6 +99,9 @@ func RecoverPanic(name string, cleanup func()) {
 var MessageDir string
 
 func GetSessionPrefix(sessionId string) string {
+	if len(sessionId) <= 8 {
+		return sessionId
+	}
 	return sessionId[:8]
 }
 
